@@ -128,3 +128,16 @@ python scripts/run_spatial_b3_package.py --help
 ## Paper-facing code map
 
 See `docs/CODE_INDEX.md` for a section-by-section mapping between manuscript claims and the released scripts.
+
+## Revision replay package (2026-10-04)
+
+Download [the curated offline replay bundle](releases/egmsqa_revision_replay_20261004.zip) and verify its [SHA256](releases/egmsqa_revision_replay_20261004.sha256). It includes the 30-series GPT matched comparison, 15-series conditional sensitivity experiment, four audit cases, and the 42-series Gemini development audit. These are different experimental settings, not a cross-model leaderboard or independent deployment validation.
+
+Extract the archive, create a Python 3.12 environment, and run:
+
+```sh
+python -m pip install -r requirements-replay.txt
+python replay.py --mode all
+```
+
+For the reference-input isolation and intervention/sensitivity extension, use a fresh extraction and run `python replay_evidence.py`. No API key or model call is required. The first command verifies 180 reconstructed deterministic answers, four audit cases and five tables; the second verifies the definition reference (252/252), 504 frozen prompts, paired intervention tables, and cached fallback sensitivity. Full instructions, limitations, exact prompts, saved responses and per-file hashes are inside the archive. This curated package does not contain every historical experiment.
