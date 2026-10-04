@@ -1,0 +1,22 @@
+{
+  "url": "https://raw.githubusercontent.com/WendongYao/Auditable-Hybrid-Inference-for-GIS-reasoning/0e9af6063d03e91a66bc778c88fc732fbe8b75e8/releases/egmsqa_revision_replay_20261004.zip",
+  "commit": "0e9af6063d03e91a66bc778c88fc732fbe8b75e8",
+  "sha256": "6fb8feff2749d364397c25708c22eefd8df7b8f95c737ea047ca769fe8023f3b",
+  "hash_match": true,
+  "bytes": 15934394,
+  "mode": "all",
+  "hashes_verified": 4772,
+  "recomputed_qa": 180,
+  "cases_verified": 4,
+  "api_calls": 0,
+  "tables_verified": [
+    "egmsqa\\out_qa_v5_8\\revision_20261002_matched\\metrics.csv",
+    "egmsqa\\out_qa_v5_8\\revision_20261002_matched\\paired_differences.csv",
+    "egmsqa\\out_qa_v5_8\\revision_20261002_uncertainty\\overview.csv",
+    "egmsqa\\out_qa_v5_8\\revision_20261002_uncertainty\\task_sensitivity.csv",
+    "egmsqa\\out_qa_v5_8\\revision_20261002_uncertainty\\conditional_distributions.csv"
+  ],
+  "extended_replay_tables_predictions": 11,
+  "isolated_environment": true,
+  "provider_calls": 0
+}
