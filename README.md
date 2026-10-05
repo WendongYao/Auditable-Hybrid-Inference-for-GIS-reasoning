@@ -141,3 +141,11 @@ python replay.py --mode all
 ```
 
 For the reference-input isolation and intervention/sensitivity extension, use a fresh extraction and run `python replay_evidence.py`. No API key or model call is required. The first command verifies 180 reconstructed deterministic answers, four audit cases and five tables; the second verifies the definition reference (252/252), 504 frozen prompts, paired intervention tables, and cached fallback sensitivity. Full instructions, limitations, exact prompts, saved responses and per-file hashes are inside the archive. This curated package does not contain every historical experiment.
+
+## Intervention and calendar replay extension (2026-10-05)
+
+The [October 5 archive](releases/egmsqa_revision_replay_20261005.zip) extends the earlier package with frozen 360-question inputs and saved responses, B/F condition checks, retrospective simple controls on five stored settings, C1 calendar diagnostics, and development/execution records. Verify its [SHA256](releases/egmsqa_revision_replay_20261005.sha256).
+
+From a fresh extraction, run `python -m pip install -r requirements-replay.txt`, then `python replay_interventions.py`. Expected output is PASS for 5,076 questions across the stored settings, all simple-control predictions/metrics, 360 independent condition checks and calendar tables. These are not 5,076 independent locations. E/BF/Q-check/H-direct give 309/323/326/323 correct on the 360-question setting; the added simple controls are retrospective, not newly frozen validation. No model calls or API keys are used.
+
+The older `replay.py --mode all` and `replay_evidence.py` commands remain available; use a separate fresh extraction for each command. Provider continuation signatures are omitted from the new response exports; visible response text, finish reasons and parsed fields are retained, with original local file hashes recorded in PROVIDER_EXPORT_NOTES.json. The archive remains a curated subset of the research, not a full historical workspace dump.
