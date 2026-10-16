@@ -1,5 +1,38 @@
 # Auditable Hybrid Inference for GIS Reasoning
 
+## Reproduce the revision results
+
+The manuscript appendix retains supporting scientific results and figures. Installation, replay and integrity-check instructions are collected here. The [supplementary provenance record](docs/APPENDIX_PROCEDURES_20261016.md) preserves longer descriptions compressed from the paper.
+
+1. Download the [pinned October 5 archive](https://github.com/WendongYao/Auditable-Hybrid-Inference-for-GIS-reasoning/raw/8124b2a9d2d98b7c39f7176c1e89b925836da572/releases/egmsqa_revision_replay_20261005.zip).
+2. Check the archive SHA256 before extraction. Expected value: `620499a33580d45dc977abb46d0cd547a6ae667d385639bf72783d90bd32ebdb`.
+
+   ```powershell
+   Get-FileHash ./egmsqa_revision_replay_20261005.zip -Algorithm SHA256
+   ```
+
+3. Extract a **separate fresh copy for each replay command** below. From the extracted bundle directory, create a Python 3.12 environment and install pinned replay dependencies:
+
+   ```sh
+   python -m venv .venv
+   # Windows:
+   .venv/Scripts/python -m pip install -r requirements-replay.txt
+   # macOS/Linux: substitute .venv/bin/python in all commands.
+   ```
+
+4. Choose the replay that answers your question:
+
+   | Command (run inside a fresh bundle extraction) | What it checks |
+   | --- | --- |
+   | `.venv/Scripts/python replay.py --mode cases` | Four saved audit paths |
+   | `.venv/Scripts/python replay.py --mode all` | 180 matched deterministic answers, four cases and five tables |
+   | `.venv/Scripts/python replay_evidence.py` | Evidence comparison, reference-input isolation, prompt reconstruction and sensitivity outputs |
+   | `.venv/Scripts/python replay_interventions.py` | Eight intervention policies over five saved settings (5,076 questions), the 360-question condition audit and calendar diagnostics |
+
+No API key or new model call is used. The replay environment was verified with Python 3.12.14. A successful replay confirms the archived outputs; it does not independently validate geological events, make repeated perturbations independent observations, or reproduce all historical experiments. Fresh inference is separate and can vary even at temperature zero. Exact prompts, retained answer text, finish reasons, rule records, manifests and export-transformation notes are inside the archive. Opaque provider continuation signatures are omitted.
+
+**Scoring-version notice (16 October 2026).** The October 5 archive is immutable and reproduces its historical scores. A later audit identified binary-floating-point rejection of some answers exactly at the inclusive A2 tolerance boundary. That correction is an evaluation fix, not a method gain. A fully synchronized corrected release and manuscript scoring audit are still pending; do not combine the archived aggregates with later decimal-boundary diagnostics. The documentation-only update here does not change the archived scoring code or claim that this issue is resolved.
+
 This repository contains the core code used in the EGMSQA study on auditable hybrid inference for GIS-oriented spatio-temporal reasoning over EGMS ground-displacement time series.
 
 The release is intentionally compact. It includes the dataset-construction script used for the released benchmark, the prompt renderers, the deterministic task-specific analyzers, the task-wise merge and gate logic, the scorer, and the main experiment / analysis scripts used in the paper revision. Large data files, score artifacts, plots, temporary work directories, and provider-specific batch runners are not included.
