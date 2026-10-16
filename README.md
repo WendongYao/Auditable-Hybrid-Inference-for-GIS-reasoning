@@ -31,7 +31,7 @@ The manuscript appendix retains supporting scientific results and figures. Insta
 
 No API key or new model call is used. The replay environment was verified with Python 3.12.14. A successful replay confirms the archived outputs; it does not independently validate geological events, make repeated perturbations independent observations, or reproduce all historical experiments. Fresh inference is separate and can vary even at temperature zero. Exact prompts, retained answer text, finish reasons, rule records, manifests and export-transformation notes are inside the archive. Opaque provider continuation signatures are omitted.
 
-**Scoring-version notice (16 October 2026).** The October 5 archive is immutable and reproduces its historical scores. A later audit identified binary-floating-point rejection of some answers exactly at the inclusive A2 tolerance boundary. That correction is an evaluation fix, not a method gain. A fully synchronized corrected release and manuscript scoring audit are still pending; do not combine the archived aggregates with later decimal-boundary diagnostics. The documentation-only update here does not change the archived scoring code or claim that this issue is resolved.
+**Scoring-version notice (16 October 2026).** Use the corrected October 16 archive below for current manuscript results. Earlier dated archives remain immutable historical records and retain earlier scores. The new evaluation fixes inclusive decimal tolerance comparisons and binding of alternative numeric targets; neither is a method improvement.
 
 This repository contains the core code used in the EGMSQA study on auditable hybrid inference for GIS-oriented spatio-temporal reasoning over EGMS ground-displacement time series.
 
@@ -182,3 +182,21 @@ The [October 5 archive](releases/egmsqa_revision_replay_20261005.zip) extends th
 From a fresh extraction, run `python -m pip install -r requirements-replay.txt`, then `python replay_interventions.py`. Expected output is PASS for 5,076 questions across the stored settings, all simple-control predictions/metrics, 360 independent condition checks and calendar tables. These are not 5,076 independent locations. E/BF/Q-check/H-direct give 309/323/326/323 correct on the 360-question setting; the added simple controls are retrospective, not newly frozen validation. No model calls or API keys are used.
 
 The older `replay.py --mode all` and `replay_evidence.py` commands remain available; use a separate fresh extraction for each command. Provider continuation signatures are omitted from the new response exports; visible response text, finish reasons and parsed fields are retained, with original local file hashes recorded in PROVIDER_EXPORT_NOTES.json. The archive remains a curated subset of the research, not a full historical workspace dump.
+
+## Corrected final-revision replay (2026-10-16)
+
+Download [the corrected replay archive](releases/egmsqa_revision_replay_20261016.zip) and verify its [SHA256](releases/egmsqa_revision_replay_20261016.sha256). It supersedes earlier accuracy summaries for the included studies. No model calls, predictions, prompts, selection or intervention thresholds changed. Numeric tolerance comparisons use decimal arithmetic; the alternative-label adapter now uses the intended alternative numeric answer instead of the original numeric target (111 B2 and 636 C2 records).
+
+Create an isolated Python environment and install `requirements-replay.txt`. Use a separate fresh archive extraction for each replay command:
+
+```sh
+python scripts/test_decimal_scoring.py
+python replay.py --mode all
+python replay_evidence.py
+python replay_interventions.py
+python replay_alternative_labels.py
+```
+
+Current E/BF/Q-check/H-direct counts are **314/328/331/328 out of 360**. On the 252-question development audit, evidence corrects 21 errors and introduces 6. The matched GPT Full score is **56.11%**, below the same-tool deterministic control's **61.67%**. Alternative step-label macro agreement is **42.52% Direct, 41.49% Full, 68.50% deterministic baseline**. These unfavorable findings remain in the manuscript. Labels measure operational agreement, not independent physical truth; the simpler controls are retrospective.
+
+The bundle includes corrected historical summaries, per-question decimal correction records, 3,027 paired alternative-label records and 24 system/definition checks. Original freeze documents retain historical numbers. The package is a curated reproducibility release, not the complete historical workspace. No credentials are needed.

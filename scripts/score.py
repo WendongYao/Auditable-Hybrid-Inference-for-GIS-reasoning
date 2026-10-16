@@ -2,10 +2,30 @@
 import argparse, json, os
 from collections import defaultdict
 from datetime import datetime
+from functools import lru_cache
+from decimal import Decimal, InvalidOperation, localcontext
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+
+NUMERIC_SCORING_VERSION = 'decimal_inclusive_20261016'
+
+def numeric_within_tolerance(prediction, target, tolerance):
+    """Inclusive comparison of decimal representations; no epsilon widening.
+
+    JSON numbers have already been parsed by callers. Their str representations
+    are the scoring values; we do not infer or round to an intended precision.
+    """
+    try:
+        p, g, t = (Decimal(str(v)) for v in (prediction, target, tolerance))
+        if not all(v.is_finite() for v in (p, g, t)) or t < 0:
+            return False
+        with localcontext() as ctx:
+            ctx.prec = max(50, sum(len(v.as_tuple().digits) + abs(v.as_tuple().exponent) for v in (p,g,t)) + 5)
+            return abs(p - g) <= t
+    except (InvalidOperation, ValueError, TypeError):
+        return False
 
 
 def read_jsonl(path: str):
@@ -65,7 +85,36 @@ def median_cadence_days(ex: Dict[str, Any], fallback: float = 6.0) -> float:
     return float(np.median(dts))
 
 
-def score_one(gold_ex: Dict[str, Any], pred_ex: Dict[str, Any]) -> Tuple[bool, str]:
+@lru_cache(maxsize=32768)
+def acquisition_grid(t_iso):
+    dates = tuple(parse_yyyymmdd(x) for x in t_iso)
+    if not dates or any(x is None for x in dates):
+        return None
+    if any(a >= b for a, b in zip(dates, dates[1:])):
+        return None
+    return dates
+
+
+def acquisition_index_details(gold_ex, pred_ans):
+    """Protocol v2: original stored timestamp grid; nearest date, ties earlier.
+
+    Preserve the documented v1 alignment policy, including endpoint snapping.
+    Expose out-of-window dates so callers can audit rather than hide snapping.
+    Do not drop timestamps according to finite displacement values.
+    """
+    dates = acquisition_grid(tuple((gold_ex.get("context", {}) or {}).get("series", {}).get("t_iso", [])))
+    gd, pd = parse_yyyymmdd(gold_ex.get("answer")), parse_yyyymmdd(pred_ans)
+    if dates is None or gd is None or pd is None:
+        return None
+    gi = min(range(len(dates)), key=lambda i: (abs((dates[i] - gd).days), i))
+    pi = min(range(len(dates)), key=lambda i: (abs((dates[i] - pd).days), i))
+    return {"gold_index": gi, "pred_index": pi, "index_error": abs(pi-gi),
+            "day_error": abs((pd-gd).days), "gold_exact": gd in dates,
+            "pred_exact": pd in dates, "gold_outside": gd < dates[0] or gd > dates[-1],
+            "pred_outside": pd < dates[0] or pd > dates[-1]}
+
+
+def score_one(gold_ex: Dict[str, Any], pred_ex: Dict[str, Any], c1_policy="acquisition_index_v2") -> Tuple[bool, str]:
     metric = (gold_ex.get("eval") or {}).get("metric")
     tol = (gold_ex.get("eval") or {}).get("tolerance") or {}
     gold_ans = gold_ex.get("answer")
@@ -86,7 +135,7 @@ def score_one(gold_ex: Dict[str, Any], pred_ex: Dict[str, Any]) -> Tuple[bool, s
         if g is None or p is None:
             return False, "num_missing"
         abs_tol = float(tol.get("value", 0.5))
-        ok = abs(p - g) <= abs_tol
+        ok = numeric_within_tolerance(pred_ans, gold_ex.get('answer_numeric', gold_ans), tol.get('value', 0.5))
         return ok, "ok" if ok else f"num_outside_tol(abs_tol={abs_tol})"
 
     if metric == "num_or_none_within_tol":
@@ -100,7 +149,7 @@ def score_one(gold_ex: Dict[str, Any], pred_ex: Dict[str, Any]) -> Tuple[bool, s
         if g is None or p is None:
             return False, "num_missing"
         abs_tol = float(tol.get("value", 0.5))
-        ok = abs(p - g) <= abs_tol
+        ok = numeric_within_tolerance(pred_ans, gold_ex.get('answer_numeric', gold_ans), tol.get('value', 0.5))
         return ok, "ok" if ok else f"num_outside_tol(abs_tol={abs_tol})"
 
     if metric == "time_or_none_within_k":
@@ -116,6 +165,14 @@ def score_one(gold_ex: Dict[str, Any], pred_ex: Dict[str, Any]) -> Tuple[bool, s
             return False, "time_parse_fail"
 
         k = int(tol.get("value", 1))
+        if c1_policy == "acquisition_index_v2":
+            details = acquisition_index_details(gold_ex, pred_ans)
+            if details is None:
+                return False, "invalid_acquisition_grid"
+            ok = details["index_error"] <= k
+            return ok, "ok" if ok else f"time_outside_tol(index_tol={k})"
+        if c1_policy != "legacy_days":
+            raise ValueError(f"Unknown C1 policy: {c1_policy}")
         cadence = median_cadence_days(gold_ex, fallback=6.0)
         day_tol = max(1.0, cadence) * float(k)
         ok = abs((pd_ - gd).days) <= day_tol
@@ -156,6 +213,7 @@ def main():
     ap.add_argument("--dataset", required=True, help="dev_balanced/test_balanced JSONL with gold labels")
     ap.add_argument("--pred", required=True, help="Predictions JSONL from run_llm.py")
     ap.add_argument("--out_dir", required=True)
+    ap.add_argument("--c1_policy", choices=["legacy_days", "acquisition_index_v2"], default="acquisition_index_v2")
     ap.add_argument(
         "--mode",
         choices=["all", "intersection"],
@@ -191,7 +249,7 @@ def main():
     for ex_id in score_ids:
         g = gold[ex_id]
         p = pred.get(ex_id, {"id": ex_id, "answer_parsed": None, "parse_error": "missing_pred"})
-        ok, reason = score_one(g, p)
+        ok, reason = score_one(g, p, c1_policy=args.c1_policy)
         rows.append(
             {
                 "id": ex_id,
@@ -236,6 +294,8 @@ def main():
     micro_acc = float(df["ok"].mean()) if len(df) else 0.0
 
     summary = {
+        "scorer_version": "20261001-v2",
+        "c1_policy": args.c1_policy,
         "mode": args.mode,
         "coverage_pred_over_gold": coverage,
         "micro_acc": micro_acc,
