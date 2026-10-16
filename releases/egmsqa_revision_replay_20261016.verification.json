@@ -1,0 +1,31 @@
+{
+  "utc": "2026-10-16T17:30:08.758354+00:00",
+  "commit": "81bcfe357ed97a24d04307c0efd8c2fe732676e7",
+  "url": "https://raw.githubusercontent.com/WendongYao/Auditable-Hybrid-Inference-for-GIS-reasoning/81bcfe357ed97a24d04307c0efd8c2fe732676e7/releases/egmsqa_revision_replay_20261016.zip",
+  "sha256": "eebcf2cd9db3d5f2d440973c57e5b10a09ec33c67d066e286c807ba85a1a6927",
+  "download_hash_matches": true,
+  "environment": "new Python 3.13 venv with pinned requirements-replay.txt",
+  "commands": [
+    {
+      "command": "python replay.py --mode all",
+      "exit_code": 0,
+      "manifest_files": 5331
+    },
+    {
+      "command": "python replay_evidence.py",
+      "exit_code": 0,
+      "manifest_files": 5331
+    },
+    {
+      "command": "python replay_interventions.py",
+      "exit_code": 0,
+      "manifest_files": 5331
+    },
+    {
+      "command": "python replay_alternative_labels.py",
+      "exit_code": 0,
+      "manifest_files": 5331
+    }
+  ],
+  "new_model_calls": 0
+}

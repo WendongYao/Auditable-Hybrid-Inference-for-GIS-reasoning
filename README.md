@@ -200,3 +200,5 @@ python replay_alternative_labels.py
 Current E/BF/Q-check/H-direct counts are **314/328/331/328 out of 360**. On the 252-question development audit, evidence corrects 21 errors and introduces 6. The matched GPT Full score is **56.11%**, below the same-tool deterministic control's **61.67%**. Alternative step-label macro agreement is **42.52% Direct, 41.49% Full, 68.50% deterministic baseline**. These unfavorable findings remain in the manuscript. Labels measure operational agreement, not independent physical truth; the simpler controls are retrospective.
 
 The bundle includes corrected historical summaries, per-question decimal correction records, 3,027 paired alternative-label records and 24 system/definition checks. Original freeze documents retain historical numbers. The package is a curated reproducibility release, not the complete historical workspace. No credentials are needed.
+
+Public-download verification of pinned commit `81bcfe3` passed all four replay commands and all 5,331 manifest entries in a new isolated environment. See [the verification record](releases/egmsqa_revision_replay_20261016.verification.json).
